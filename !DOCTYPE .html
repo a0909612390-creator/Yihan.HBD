@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>生日快樂 羿函</title>
+  <link href="https://fonts.googleapis.com/css2?family=Audiowide&display=swap" rel="stylesheet">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      font-family: 'Audiowide', sans-serif;
+      background-color: black;
+      color: white;
+    }
+
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .center-text {
+      position: absolute;
+      width: 100%;
+      text-align: center;
+      top: 45%;
+      transform: translateY(-50%);
+      font-size: 2rem;
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      background: linear-gradient(90deg, #ffcc70, #f06292, #ba68c8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      color: transparent;
+      animation: glow 1.5s infinite alternate;
+    }
+
+    .countdown {
+      font-size: 4rem;
+      color: #ffffff;
+      text-shadow: 0 0 15px #f06292;
+    }
+
+    @keyframes glow {
+      from { text-shadow: 0 0 5px #f06292; }
+      to { text-shadow: 0 0 20px #ba68c8, 0 0 30px #f06292; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="message" class="center-text">To 羿函</div>
+<div id="countdown" class="center-text countdown"></div>
+<canvas id="fireworks"></canvas>
+
+<script>
+  const msgEl = document.getElementById('message');
+  const countdownEl = document.getElementById('countdown');
+  const canvas = document.getElementById("fireworks");
+  const ctx = canvas.getContext("2d");
+
+  let W = canvas.width = window.innerWidth;
+  let H = canvas.height = window.innerHeight;
+
+  const messages = [
+    "3", "2", "1",
+    "Happy Birthday 🎉",
+    "生日快樂 羿函~",
+    "願妳的20歲依舊閃亮 ✨"
+  ];
+
+  let step = 0;
+  let fireworksActive = false;
+  let fireworksTimer;
+  let particles = [];
+
+  function showMessage(text, isCountdown = false) {
+    if (isCountdown) {
+      countdownEl.innerText = text;
+      countdownEl.style.opacity = 1;
+      setTimeout(() => countdownEl.style.opacity = 0, 1000);
+    } else {
+      msgEl.innerText = text;
+      msgEl.style.opacity = 1;
+    }
+  }
+
+  function hideMessage() {
+    msgEl.style.opacity = 0;
+  }
+
+  function startSequence() {
+    if (step < 3) {
+      showMessage(messages[step], true);
+      step++;
+      setTimeout(startSequence, 1800);
+    } else if (step === 3) {
+      showMessage(messages[step]);
+      step++;
+      startFireworks();
+      setTimeout(startSequence, 4000);
+    } else if (step < messages.length) {
+      msgEl.innerText = messages[step];
+      step++;
+      setTimeout(startSequence, 4000);
+    } else {
+      // 結尾處理
+      stopFireworks();
+      hideMessage();
+      setTimeout(() => {
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, W, H);
+      }, 3000);
+    }
+  }
+
+  window.onload = () => {
+    setTimeout(() => {
+      msgEl.style.opacity = 1;
+      setTimeout(() => {
+        msgEl.style.opacity = 0;
+        setTimeout(startSequence, 1000);
+      }, 2000);
+    }, 1000);
+  };
+
+  function createFirework(x, y) {
+    const colors = ["#f06292", "#ba68c8", "#ffd54f", "#4fc3f7"];
+    for (let i = 0; i < 80; i++) {
+      particles.push({
+        x, y,
+        radius: Math.random() * 2 + 1,
+        angle: Math.random() * Math.PI * 2,
+        speed: Math.random() * 5 + 2,
+        alpha: 1,
+        color: colors[Math.floor(Math.random() * colors.length)]
+      });
+    }
+  }
+
+  function animate() {
+    if (!fireworksActive) return;
+    ctx.fillStyle = "rgba(0, 0, 0, 0.15)";
+    ctx.fillRect(0, 0, W, H);
+
+    particles.forEach((p, i) => {
+      p.x += Math.cos(p.angle) * p.speed;
+      p.y += Math.sin(p.angle) * p.speed;
+      p.alpha -= 0.01;
+      if (p.alpha <= 0) particles.splice(i, 1);
+
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(${hexToRgb(p.color)},${p.alpha})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(animate);
+  }
+
+  function startFireworks() {
+    fireworksActive = true;
+    fireworksTimer = setInterval(() => {
+      createFirework(Math.random() * W, Math.random() * H / 2);
+    }, 800);
+    animate();
+  }
+
+  function stopFireworks() {
+    fireworksActive = false;
+    clearInterval(fireworksTimer);
+  }
+
+  function hexToRgb(hex) {
+    const c = hex.substring(1).match(/.{1,2}/g).map(v => parseInt(v, 16));
+    return c.join(',');
+  }
+
+  window.onresize = () => {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  };
+</script>
+
+</body>
+</html>
